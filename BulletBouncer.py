@@ -20,6 +20,9 @@ class Player:
         self.jumpcount = 10
         self.jumping = False
     #next 3 functions for changing x position
+    def update(self):
+        if self.rect.bottom < 660 and not self.falling:
+            self.falling = True
     def right(self):
         if self.jumping:
             return
@@ -54,12 +57,6 @@ class Player:
                         self.jumping = False
                         self.falling = True
                         return
-#                if self.rect.bottom >= 660 and self.falling:
-#                    self.rect.bottom = 660
-#                    self.jumping = False
-#                    self.falling = False
-#                    self.jumpcount = 10
-#                    return
                 self.rect.bottom -= int((self.jumpcount**2) * 0.25 * self.neg) #replace 0.5(default) for change in height that is desired.
                 self.jumpcount -= 1
             else:
@@ -119,6 +116,7 @@ while True:
     canvas.fill((255, 255, 255))
     player.move(paddles)
     player.display(canvas)
+    player.update()
     paddles.update()
     paddles.move()
     paddles.display(canvas)
