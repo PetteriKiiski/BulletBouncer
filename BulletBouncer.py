@@ -1,5 +1,4 @@
 import pygame, sys, time
-import RealJump as rj
 from pygame.locals import *
 pygame.init()
 canvas = pygame.display.set_mode((400, 660))
@@ -12,30 +11,29 @@ class Player:
         self.imgs = [PlayerRight, PlayerLeft]
         self.img = self.imgs[0]
         self.movex = 0
+        self.neg = 1
+        self.jumpcount = 10
         self.jumping = False
-        self.jumpt = 0
-        self.jumpVel = 0
     def right(self):
         self.movex = 5
         self.img = self.imgs[0]
     def left(self):
-        self.movex = 5
+        self.movex = -5
         self.img = self.imgs[1]
     def move(self):
-        if self.rect.right >= 660 and self.rect.left <= 0:
-            self.rect.left += self.movex
         if self.jumping:
-            oldrectbottom = self.rect.bottom
-            move = rj.MoveY((time.time() - self.jumpt), -9.81, 0, self.jumpVel)
-            self.rect.bottom += move[0]
-            self.jumpVel = move[1]
-            print (move)
-
-#            print (self.rect.bottom)
-            self.jumpt = time.time()
-            if self.rect.bottom >= 660:
-                self.jumpVel = 0
+            if self.jumpcount >= -10:
+                self.neg = 1
+                if self.jumpcount < 0:
+                    self.neg = -1
+                self.rect.bottom -= int((self.jumpcount**2) * 0.25 * self.neg) #replace 0.5(default) for change in height that is desired.
+                self.jumpcount -= 1
+            else:
                 self.jumping = False
+                self.jumpcount = 10
+        if (self.rect.right >= 400 and self.movex == 5) or (self.rect.left <= 0 and self.movex == -5):
+            self.movex = 0
+        self.rect.right += self.movex 
     def jump(self):
         if not self.jumping:
             self.jumping = True
@@ -61,4 +59,9 @@ while True:
         if event.type == KEYDOWN:
             if event.key == K_SPACE:
                 player.jump()
+            if event.key == K_RIGHT:
+                player.right()
+            if event.key == K_LEFT:
+                player.left()
     pygame.display.update()
+    time.sleep(0.01)
