@@ -3,7 +3,7 @@ from pygame.locals import *
 pygame.init()
 canvas = pygame.display.set_mode((400, 660))
 pygame.display.set_caption("Bullet Bouncer")
-#pygame.display.
+LazerImg = pygame.image.load("Lazer.png")
 PlayerRight = pygame.image.load("MoveRight.png")
 PlayerLeft = pygame.image.load("MoveLeft.png")
 PaddleImg = pygame.image.load("Paddle.png")
@@ -19,19 +19,25 @@ class Player:
         self.falling = False
         self.jumpcount = 10
         self.jumping = False
+        self.alt = True
     #next 3 functions for changing x position
+    def alter(self):
+        self.alt = not self.alt
+        if self.movex != 0:
+            self.movex /= abs(self.movex)
+            self.movex *= 3 * (int(self.alt) + 1)
     def update(self):
         if self.rect.bottom < 660 and not self.falling:
             self.falling = True
     def right(self):
         if self.jumping:
             return
-        self.movex = 6
+        self.movex = (int(self.alt) + 1) * 3
         self.img = self.imgs[0]
     def left(self):
         if self.jumping:
             return
-        self.movex = -6
+        self.movex = (int(self.alt) + 1) * -3
         self.img = self.imgs[1]
     def on_paddles(self, paddles):
         for paddle in paddles.paddles:
@@ -44,7 +50,7 @@ class Player:
         self.movex = 0
     #next 2 functions for changing y position
     def move(self, paddles):
-        if (self.rect.right >= 400 and self.movex == 6) or (self.rect.left <= 0 and self.movex == -6):
+        if (self.rect.right >= 400 and self.movex > 0) or (self.rect.left <= 0 and self.movex < 0):
             self.movex = 0
         self.rect.right += self.movex        
         if self.jumping or self.falling:
@@ -90,7 +96,9 @@ class Paddle:
         canvas.blit(self.img, self.rect)
 class Paddles:
     def __init__(self):
-        self.paddles = [Paddle(), Paddle(), Paddle(), Paddle(), Paddle(), Paddle(), Paddle(), Paddle(), Paddle(), Paddle(), Paddle(), Paddle(), Paddle(), Paddle(), Paddle()]
+        self.paddles = []
+        for i in range(20):
+            self.paddles += [Paddle()]
     def update(self):
         counter = 0
         for paddle in self.paddles:
@@ -98,8 +106,11 @@ class Paddles:
                 counter += 1
             if paddle.rect.right < 0 and paddle.movex == -3:
                 counter += 1
-        if counter == 15:
-            self.paddles = [Paddle(), Paddle(), Paddle(), Paddle(), Paddle(), Paddle(), Paddle(), Paddle(), Paddle(), Paddle(), Paddle(), Paddle(), Paddle(), Paddle(), Paddle()]
+        if counter == len(self.paddles):
+            print ("yupadoodle")
+            self.paddles = []
+            for i in range(20):
+                self.paddles += [Paddle()]
     def move(self):
         for paddle in self.paddles:
             paddle.move()
@@ -107,9 +118,28 @@ class Paddles:
         for paddle in self.paddles:
             paddle.display(canvas)
 class Lazer:
-    pass
+    def __init__(self):
+        self.rect = pygame.Rect(0, 0, 500, 30)
+        self.img = LazerImg
+        self.launching = False
+        self.launch_t = time.time()
+        self.wait_t = time.time()
+    def update(self, player):
+        if not self.launching:
+            if time.time() - self.wait_t >= 5:
+                self.launching = True
+                self.launch_t = time.time()
+        else:
+            if time.time() - self.launch_t >= 3:
+                self.launching = False
+                self.wait_t = time.time()
+                self.rect.top = player.rect.top
+    def display(self, canvas):
+        if self.launching:
+            canvas.blit(self.img, self.rect)
 player = Player()
 paddles = Paddles()
+lazer = Lazer()
 #MAIN LOOP
 while True:
     #reset canvas and adjust
@@ -120,6 +150,18 @@ while True:
     paddles.update()
     paddles.move()
     paddles.display(canvas)
+    lazer.update(player)
+    lazer.display(canvas)
+    if player.rect.colliderect(lazer.rect) and lazer.launching:
+        lazer.update(player)
+        lazer.display(canvas)
+        while True:
+            print ("You LOSE >:)")
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    pygame.quit()
+                    sys.exit()
+                pygame.display.update()
     #react to events
     for event in pygame.event.get():
         #quit if requested
@@ -138,5 +180,8 @@ while True:
                 player.left()
             if event.key == K_DOWN:
                 player.stop()
+        #ALTer the player speed
+            if event.key in [K_RALT, K_LALT]:
+                player.alter()
     pygame.display.update()
     time.sleep(0.02)
