@@ -92,8 +92,8 @@ class Bullet:
         self.yc = 0
         self.x = self.rect.centerx
         self.y = self.rect.centery
-        self.SPEED = 1
-        self.AFTERSPEED = 3
+        self.SPEED = int(sys.argv[1])
+        self.AFTERSPEED = int(sys.argv[2])
     def move(self, player):
         x_delta = player.rect.centerx - self.x
         y_delta = player.rect.centery - self.y
