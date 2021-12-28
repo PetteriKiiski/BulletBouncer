@@ -10,6 +10,7 @@ PlayerLeft = pygame.image.load("MoveLeft.png")
 PaddleImg = pygame.image.load("Paddle.png")
 Boing = pygame.mixer.Sound("boing.wav")
 LazerSound = pygame.mixer.Sound("lazer.wav")
+Victory = pygame.mixer.Sound("victory.wav")
 class Player:
     #Defining some basic variables needed later
     def __init__(self):
@@ -192,9 +193,12 @@ player = Player()
 paddles = Paddles()
 lazer = Lazer()
 bullets = Bullets()
+counter = 0
+counterfont = pygame.font.SysFont(None, 30)
 #MAIN LOOP
 while True:
     #reset canvas and adjust
+    counter += 1
     canvas.fill((255, 255, 255))
     player.move(paddles)
     player.display(canvas)
@@ -207,6 +211,8 @@ while True:
     bullets.update()
     bullets.move(player)
     bullets.display(canvas)
+    rendered = counterfont.render(str(counter), True, (0, 0, 0))
+    canvas.blit(rendered, (0, 0))
     dead = False
     for bullet in bullets.bullets:
         if bullet.rect.colliderect(player.rect):
@@ -214,6 +220,17 @@ while True:
     if dead or (player.rect.colliderect(lazer.rect) and lazer.launching):
         lazer.update(player)
         lazer.display(canvas)
+        highscore = False
+        try:
+            with open("highscore.txt", "r") as fh:
+                if int(fh.read()) < counter:
+                    highscore = True
+            if highscore:
+                Victory.play()
+                with open("highscore.txt", "w") as fh:
+                    fh.write(str(counter))
+        except:
+            print("ERROR")
         pygame.mixer.fadeout(3000)
         while True:
             print ("You LOSE >:)")
